@@ -74,7 +74,8 @@
 <script>
 /* ADD NEW PDFs HERE
    1. Put the PDF in the "files" folder of your repo.
-   2. Add a line below: { title, file, note (optional) }  */
+   2. Add a line below: { title, file, note (optional) }
+   The list sorts itself alphabetically by title.  */
 const LIBRARY = [
   { title: "UE and LE Pathologies and Tests", file: "UE_and_LE_Pathologies_and_Tests.pdf", note: "Pathologies and special tests" },
   { title: "Kinesiology", file: "Kinesiology.pdf" },
@@ -83,8 +84,13 @@ const LIBRARY = [
   { title: "Lab 1", file: "Lab_1_fall.pdf" },
   { title: "Myotomes and Dermatomes", file: "Myotomes_and_Dermatomes.pdf" },
   { title: "UE Bingo", file: "bingo_UE_23.pdf" },
-  { title: "Foramen", file: "foramen.pdf" }
+  { title: "Foramen", file: "foramen.pdf" },
+  { title: "Brachial Plexus", file: "Brachial_Plexus.pdf" },
+  { title: "Introduction to SOAP Notes", file: "Intro_to_SOAP_Notes.pdf" },
+  { title: "Joints", file: "Joints.pdf" }
 ];
+
+LIBRARY.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base", numeric: true }));
 
 const FOLDER = "files/";
 const $ = id => document.getElementById(id);
