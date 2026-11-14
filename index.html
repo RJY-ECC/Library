@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Library</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<style>
+  :root {
+    --paper: #f3f5f7; --surface: #ffffff; --ink: #14232e; --muted: #5b6b77;
+    --line: #d5dde3; --accent: #2b6a8a; --accent-ink: #ffffff; --sel: #e3edf3; --focus: #e08a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0f1a22; --surface: #16252f; --ink: #e8eef2; --muted: #9aaab5;
+      --line: #28404e; --accent: #6db3d4; --accent-ink: #0f1a22; --sel: #1f3542; --focus: #ffb43d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column;
+  }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+  .app { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px 1fr; }
+  nav { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); }
+  nav ul { list-style: none; margin: 0; padding: 8px; }
+  nav button {
+    width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+    background: transparent; border: 0; border-radius: 6px; padding: 10px 12px;
+  }
+  nav button:hover { background: var(--sel); }
+  nav button[aria-current="true"] { background: var(--sel); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+  nav small { display: block; color: var(--muted); font-weight: 400; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .bar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  .bar .name { flex: 1; font-weight: 600; min-width: 140px; }
+  .btn {
+    text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 7px 12px; border-radius: 6px;
+    background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
+  }
+  .btn.alt { background: transparent; color: var(--accent); }
+  iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  .hint { padding: 60px 24px; color: var(--muted); text-align: center; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 34vh; }
+  }
+</style>
+</head>
+<body>
+<header><h1>Study Library</h1></header>
+<div class="app">
+  <nav aria-label="Documents"><ul id="list"></ul></nav>
+  <main>
+    <div class="bar" id="bar" hidden>
+      <span class="name" id="name"></span>
+      <a class="btn alt" id="newtab" target="_blank" rel="noopener">Open in new tab</a>
+      <a class="btn" id="dl" download>Download</a>
+    </div>
+    <iframe id="viewer" title="PDF viewer" hidden></iframe>
+    <div class="hint" id="hint">Pick a document from the list to read it here.</div>
+  </main>
+</div>
+
+<script>
+/* ADD NEW PDFs HERE
+   1. Put the PDF in the "files" folder of your repo.
+   2. Add a line below: { title, file, note (optional) }  */
+const LIBRARY = [
+  { title: "UE and LE Pathologies and Tests", file: "UE_and_LE_Pathologies_and_Tests.pdf", note: "Pathologies and special tests" },
+  { title: "Kinesiology", file: "Kinesiology.pdf" },
+  { title: "Shoulder", file: "shoulder_25.pdf" },
+  { title: "Elbow", file: "elbos.pdf" }
+];
+
+const FOLDER = "files/";
+const $ = id => document.getElementById(id);
+const path = f => FOLDER + encodeURIComponent(f);
+
+function show(i, updateHash = true) {
+  const item = LIBRARY[i];
+  if (!item) return;
+  const src = path(item.file);
+  $("viewer").src = src;
+  $("viewer").hidden = false;
+  $("hint").hidden = true;
+  $("bar").hidden = false;
+  $("name").textContent = item.title;
+  $("newtab").href = src;
+  $("dl").href = src;
+  $("dl").setAttribute("download", item.file);
+  document.querySelectorAll("#list button").forEach((b, n) =>
+    b.setAttribute("aria-current", String(n === i)));
+  document.title = item.title + " · Study Library";
+  if (updateHash) history.replaceState(null, "", "#" + i);
+}
+
+LIBRARY.forEach((item, i) => {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.textContent = item.title;
+  if (item.note) { const s = document.createElement("small"); s.textContent = item.note; b.appendChild(s); }
+  b.onclick = () => show(i);
+  li.appendChild(b);
+  $("list").appendChild(li);
+});
+
+const start = parseInt(location.hash.slice(1), 10);
+if (!isNaN(start)) show(start, false);
+</script>
+</body>
+</html>
