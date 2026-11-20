@@ -10,10 +10,17 @@
     --paper: #f3f5f7; --surface: #ffffff; --ink: #14232e; --muted: #5b6b77;
     --line: #d5dde3; --accent: #2b6a8a; --accent-ink: #ffffff; --sel: #e3edf3; --focus: #e08a00;
   }
+  :root[data-theme="dark"] {
+    --paper: #0f1a22; --surface: #16252f; --ink: #e8eef2; --muted: #9aaab5;
+    --line: #28404e; --accent: #6db3d4; --accent-ink: #0f1a22; --sel: #1f3542; --focus: #ffb43d;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --paper: #0f1a22; --surface: #16252f; --ink: #e8eef2; --muted: #9aaab5;
       --line: #28404e; --accent: #6db3d4; --accent-ink: #0f1a22; --sel: #1f3542; --focus: #ffb43d;
+      color-scheme: dark;
     }
   }
   * { box-sizing: border-box; }
@@ -24,7 +31,7 @@
     font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     display: flex; flex-direction: column;
   }
-  header { padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; }
   .app { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px 1fr; }
   nav { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); }
@@ -48,6 +55,12 @@
     background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
   }
   .btn.alt { background: transparent; color: var(--accent); }
+  .tbtn {
+    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; color: var(--accent);
+    background: transparent; border: 1px solid var(--accent); border-radius: 6px; padding: 7px 12px;
+  }
+  .tbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  iframe.inverted { filter: invert(0.92) hue-rotate(180deg); }
   iframe { flex: 1; width: 100%; border: 0; background: #fff; }
   .hint { padding: 60px 24px; color: var(--muted); text-align: center; }
   @media (max-width: 760px) {
@@ -57,12 +70,13 @@
 </style>
 </head>
 <body>
-<header><h1>Study Library</h1></header>
+<header><h1>Study Library</h1><button class="tbtn" id="theme" type="button" aria-label="Toggle dark mode"></button></header>
 <div class="app">
   <nav aria-label="Documents"><ul id="list"></ul></nav>
   <main>
     <div class="bar" id="bar" hidden>
       <span class="name" id="name"></span>
+      <button class="tbtn" id="invert" type="button" aria-pressed="false" title="Darken the PDF page itself">Dark PDF</button>
       <a class="btn alt" id="newtab" target="_blank" rel="noopener">Open in new tab</a>
       <a class="btn" id="dl" download>Download</a>
     </div>
@@ -92,7 +106,8 @@ const LIBRARY = [
   { title: "Head and Neck Key", file: "Head_and_Neck_Key.pdf" },
   { title: "LE and Pelvis Muscle Key", file: "LE_Pelvis_Muscle_Key.pdf" },
   { title: "Bingo 1", file: "Bingo_01.pdf" },
-  { title: "Bingo 2 (Alumni Version)", file: "Bingo_02_Alumni_Version.pdf" }
+  { title: "Bingo 2 (Alumni Version)", file: "Bingo_02_Alumni_Version.pdf" },
+  { title: "Hip", file: "hip.pdf" }
 ];
 
 LIBRARY.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base", numeric: true }));
@@ -128,6 +143,27 @@ LIBRARY.forEach((item, i) => {
   li.appendChild(b);
   $("list").appendChild(li);
 });
+
+/* ---- Dark mode ---- */
+const root = document.documentElement;
+const media = window.matchMedia("(prefers-color-scheme: dark)");
+function saved(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function currentTheme() { return root.dataset.theme || (media.matches ? "dark" : "light"); }
+function applyTheme(t) {
+  root.dataset.theme = t;
+  $("theme").textContent = t === "dark" ? "☀ Light mode" : "🌙 Dark mode";
+}
+applyTheme(saved("theme") || currentTheme());
+$("theme").onclick = () => { const t = currentTheme() === "dark" ? "light" : "dark"; save("theme", t); applyTheme(t); };
+
+/* Invert the PDF page colors (optional) */
+function applyInvert(on) {
+  $("viewer").classList.toggle("inverted", on);
+  $("invert").setAttribute("aria-pressed", String(on));
+}
+applyInvert(saved("invert") === "1");
+$("invert").onclick = () => { const on = !$("viewer").classList.contains("inverted"); save("invert", on ? "1" : "0"); applyInvert(on); };
 
 const start = parseInt(location.hash.slice(1), 10);
 if (!isNaN(start)) show(start, false);
